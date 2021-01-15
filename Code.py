@@ -1,15 +1,8 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[1]:
-
+'''PRE-PROCESSING'''
 
 import sys
 sys.path.append('C:\\.snap\\snap-python\\snappy')
 import snappy
-
-
-# In[2]:
 
 
 from os.path import join
@@ -21,9 +14,6 @@ import pandas as pd
 import snappy
 from snappy import jpy, GPF, ProductIO
 import matplotlib.pyplot as plt
-
-
-# In[3]:
 
 
 #set target folder and extract metadata
@@ -45,9 +35,6 @@ for i in input_S1_files:
     s1_data.append(s1_read)   
 
 
-# In[6]:
-
-
 def read(filename):
     return ProductIO.readProduct(filename)
 
@@ -65,17 +52,12 @@ def apply_orbit_file(product):
     return snappy.GPF.createProduct("Apply-Orbit-File", parameters, product)
 
 
-# In[8]:
-
 
 '''THERMAL NOISE REMOVAL'''
 def thermal_noise_removal(product):
     parameters = snappy.HashMap()
     parameters.put('removeThermalNoise', True)
     return snappy.GPF.createProduct('thermalNoiseRemoval', parameters, product)
-
-
-# In[9]:
 
 
 '''CALIBRATION'''
@@ -88,16 +70,10 @@ def calibration(product):
     return snappy.GPF.createProduct('Calibration', parameters, product)
 
 
-# In[10]:
-
-
 '''TERRAIN FLATTENING'''
 def terrain_flattening(product):
     parameters = snappy.HashMap()
     return snappy.GPF.createProduct('Terrain-Flattening', parameters, product)
-
-
-# In[11]:
 
 
 '''TERRAIN CORRECTION'''
@@ -155,8 +131,6 @@ def terrain_correction(product, proj):
     return snappy.GPF.createProduct('Terrain-Correction', parameters, product)
 
 
-# In[12]:
-
 
 '''SUBSET'''
 wkt_PO= 'POLYGON((-8.76874876510233392 37.15010193049546672, -8.76734497314194883 37.60592873585844131, -7.96268434574197403 37.60159916951047876, -7.96939235295303483 37.14584665530825447, -8.76874876510233392 37.15010193049546672))'
@@ -169,17 +143,12 @@ def subset(product, geom):
     return snappy.GPF.createProduct('Subset', parameters, product)
 
 
-# In[13]:
-
 
 '''COREGISTRATION: CREATE STACK'''
 def create_stack(product):
     parameters = snappy.HashMap()
     parameters.put('extent','Master')
     return snappy.GPF.createProduct("CreateStack", parameters, product)
-
-
-# In[14]:
 
 
 '''MULTITEMPORAL SPECKLE FILTER'''
@@ -192,8 +161,6 @@ def multitemporal_filter(product):
     return snappy.GPF.createProduct('Multi-Temporal-Speckle-Filter', parameters, product)
 
 
-# In[28]:
-
 
 '''GLCM'''
 def GLCM(product):
@@ -205,9 +172,6 @@ def GLCM(product):
     parameters.put('outputHomogeneity', False)
     parameters.put('outputMAX', False)
     return snappy.GPF.createProduct('GLCM', parameters, product)
-
-
-# In[15]:
 
 
 '''Process'''
@@ -229,16 +193,10 @@ stack = create_stack(PL)
 filtered = multitemporal_filter(stack)
 
 
-# In[16]:
-
-
 bands = filtered.getBandNames()
 #print("Bands:%s" % (list(bands)))
 bands_name= list(bands)
 bands_name
-
-
-# In[17]:
 
 
 '''Creation of Time-Average'''
@@ -275,17 +233,11 @@ parameters.put('targetBands', targetBands)
 TimeAverage = GPF.createProduct('BandMaths', parameters, filtered)
     
 
-
-# In[18]:
-
-
 bands = TimeAverage.getBandNames()
 #print("Bands:%s" % (list(bands)))
 bands_name= list(bands)
 bands_name
 
-
-# In[25]:
 
 
 '''Creation of Time-Average'''
@@ -339,38 +291,23 @@ parameters.put('targetBands', targetBands)
 Indices = GPF.createProduct('BandMaths', parameters, TimeAverage)
 
 
-# In[26]:
-
-
 bands = Indices.getBandNames()
 #print("Bands:%s" % (list(bands)))
 bands_name= list(bands)
 bands_name
 
 
-# In[30]:
-
-
 '''GLCM'''
 glcm = GLCM(Indices)
-
-
-# In[ ]:
 
 
 '''WRITING'''
 write(glcm, 'C:folder\\dataset_output.dim')
 
 
-# In[ ]:
+=======================================================
 
-
-
-
-
-# In[ ]:
-
-
+'''PROCESSING'''
 from osgeo import gdal, osr
 import json, re, itertools, os
 import numpy as np
@@ -378,9 +315,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import seaborn as sns
-
-
-# In[ ]:
 
 
 "Open the S-1 Dataset"
@@ -405,8 +339,6 @@ list_files
 list_bands
 
 
-# In[ ]:
-
 
 '''Reshaping'''
 colxrig = list_bands[0].shape[0] * list_bands[0].shape[1]
@@ -414,7 +346,6 @@ vectors = [band.reshape(colxrig,1) for band in list_bands]
 reshapedDataset = np.array(vectors).reshape(len(list_bands),colxrig).transpose()
 
 
-# In[ ]:
 
 
 '''Rescale '''
@@ -424,7 +355,6 @@ normal = MinMaxScaler()
 dataset= normal.fit_transform(reshapedDataset)
 
 
-# In[ ]:
 
 
 '''Principal Component Analysis'''
@@ -434,7 +364,6 @@ pca = PCA(n_components= reshapedDataset.shape[1]).fit(dataset)
 pca_dataset = pca.transform(dataset)
 
 
-# In[ ]:
 
 
 '''Chose the first PCs that reaches 99% of cumulative variance'''
@@ -445,7 +374,6 @@ n_pcs = len(subset99)
 pc_to_classify = pca_dataset[:,:n_pcs]
 
 
-# In[ ]:
 
 
 '''Silhouette Score'''
@@ -468,8 +396,6 @@ for k in k_space:
     scores.append(silhouetteScore)
     print("Found %d clusters with an average Silhouette Score of %.3f" % (k, silhouetteScore))
 
-
-# In[ ]:
 
 
 '''K-MEAN classification'''
