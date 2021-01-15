@@ -42,8 +42,6 @@ def write(product, filename):
     ProductIO.writeProduct(product, filename, "BEAM-DIMAP")
 
 
-# In[7]:
-
 
 '''APPLY ORBIT FILE'''
 def apply_orbit_file(product):
